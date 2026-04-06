@@ -223,12 +223,19 @@ h1 {
 
 .board-shell {
   padding: 18px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  overflow: hidden;
 }
 
 .board {
   display: grid;
-  grid-template-columns: repeat(10, minmax(52px, 1fr));
-  grid-template-rows: repeat(10, minmax(52px, 1fr));
+  width: min(100%, 76vh, 760px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: repeat(10, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -236,7 +243,7 @@ h1 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 72px;
+  min-height: 0;
   padding: 8px;
   border-radius: 18px;
   background: var(--tile);
@@ -263,12 +270,21 @@ h1 {
 
 .tile__marker {
   color: var(--muted);
+  line-height: 1.1;
 }
 
 .tile__tokens {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.board-legend {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .token {
@@ -326,13 +342,11 @@ h1 {
   }
 
   .board {
-    grid-template-columns: repeat(10, minmax(28px, 1fr));
-    grid-template-rows: repeat(10, minmax(28px, 1fr));
+    width: min(100%, calc(100vw - 56px), 520px);
     gap: 4px;
   }
 
   .tile {
-    min-height: 50px;
     padding: 6px;
     border-radius: 14px;
   }
@@ -354,5 +368,9 @@ h1 {
   .board-shell,
   .player-card {
     padding: 14px;
+  }
+
+  .board-legend {
+    font-size: 0.8rem;
   }
 }

@@ -18,6 +18,7 @@ const elements = {
   turnLabel: document.querySelector("#turn-label"),
   diceValue: document.querySelector("#dice-value"),
   boardSize: document.querySelector("#board-size"),
+  boardLegend: document.querySelector("#board-legend"),
   moveSummary: document.querySelector("#move-summary"),
   players: document.querySelector("#players"),
   banner: document.querySelector("#banner")
@@ -86,6 +87,7 @@ elements.setupButton.addEventListener("click", () => {
 renderBoard();
 renderPlayerFields();
 elements.boardSize.textContent = String(BOARD_SIZE);
+elements.boardLegend.textContent = "🐍 Snake slide  •  🪜 Ladder climb";
 
 function renderPlayerFields() {
   elements.playerFields.replaceChildren();
@@ -180,7 +182,7 @@ function renderBoard() {
     const marker = document.createElement("span");
     marker.className = "tile__marker";
     if (cell.destination) {
-      marker.textContent = `${cell.destination > cell.value ? "L" : "S"}→${cell.destination}`;
+      marker.textContent = `${cell.destination > cell.value ? "🪜" : "🐍"} ${cell.destination}`;
     }
 
     const tokens = document.createElement("div");
