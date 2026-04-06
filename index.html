@@ -3,93 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Snakes and Ladders Rooms</title>
+    <title>Vyom's Snake Hub</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app" id="app-shell" data-mode="lobby">
-      <section class="hero">
-        <p class="hero__eyebrow">Realtime board room</p>
-        <h1>Snakes and Ladders for two players</h1>
-        <p class="hero__copy">
-          Create a room, share the code, and take turns rolling dice on the same live board.
-        </p>
-      </section>
-
-      <section class="panel panel--lobby" id="lobby-panel">
-        <div class="panel__block">
-          <h2>Create room</h2>
-          <form id="create-form" class="stack">
-            <label class="field">
-              <span>Your name</span>
-              <input id="player-name" name="name" maxlength="20" placeholder="Player one" required />
-            </label>
-            <button class="button" type="submit">Create room</button>
-          </form>
-        </div>
-
-        <div class="panel__block">
-          <h2>Join room</h2>
-          <form id="join-form" class="stack">
-            <label class="field">
-              <span>Your name</span>
-              <input id="join-name" name="join-name" maxlength="20" placeholder="Player two" required />
-            </label>
-            <label class="field">
-              <span>Room code</span>
-              <input id="join-code" name="room-code" maxlength="4" placeholder="AB12" required />
-            </label>
-            <button class="button button--ghost" type="submit">Join room</button>
-          </form>
-        </div>
-      </section>
-
-      <section class="panel panel--room" id="room-panel" hidden>
-        <div class="room-header">
+    <main class="app">
+      <section class="game-shell" aria-label="Snake game">
+        <header class="hud">
           <div>
-            <p class="hero__eyebrow">Room <strong id="room-code">----</strong></p>
-            <h2 id="room-status">Waiting</h2>
-            <p id="room-hint" class="muted"></p>
+            <p class="eyebrow">Arcade Garden</p>
+            <h1>Vyom's Snake Hub</h1>
           </div>
-          <div class="room-actions">
-            <button class="button" id="action-button" type="button">Roll dice</button>
-            <button class="button button--ghost" id="leave-button" type="button">Leave</button>
+          <div class="stats" aria-live="polite">
+            <div class="stat">
+              <span>Score</span>
+              <strong id="score">0</strong>
+            </div>
+            <div class="stat">
+              <span>Status</span>
+              <strong id="status">Ready</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls-row">
+          <p class="instructions">
+            Slip around with arrow keys or WASD. Press space to pause, then dive back in when you're ready.
+          </p>
+          <button id="restart-button" class="button" type="button">Restart</button>
+        </section>
+
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="Snake board"></div>
+          <div id="game-over-overlay" class="overlay" hidden>
+            <div class="overlay__card" role="alert" aria-live="assertive">
+              <p class="overlay__eyebrow">Round Over</p>
+              <h2>The snake tied itself in a knot</h2>
+              <p>Press restart or tap space to spin up a fresh run.</p>
+            </div>
           </div>
         </div>
 
-        <div class="status-grid">
-          <article class="status-card">
-            <span>You</span>
-            <strong id="your-name">Player</strong>
-          </article>
-          <article class="status-card">
-            <span>Turn</span>
-            <strong id="turn-label">Lobby open</strong>
-          </article>
-          <article class="status-card">
-            <span>Last dice</span>
-            <strong id="dice-value">–</strong>
-          </article>
-          <article class="status-card">
-            <span>Board</span>
-            <strong><span id="board-size">100</span> squares</strong>
-          </article>
-        </div>
-
-        <p class="banner" id="banner" aria-live="polite"></p>
-        <p class="move-summary" id="move-summary">No dice rolled yet.</p>
-
-        <div class="game-grid">
-          <section class="players" id="players" aria-label="Players"></section>
-          <section class="board-shell">
-            <div id="board" class="board" aria-label="Snakes and Ladders board"></div>
-          </section>
-        </div>
+        <section class="mobile-controls" aria-label="On-screen controls">
+          <button class="button control up" data-direction="up" type="button">Up</button>
+          <div class="mobile-controls__row">
+            <button class="button control" data-direction="left" type="button">Left</button>
+            <button class="button control" data-direction="down" type="button">Down</button>
+            <button class="button control" data-direction="right" type="button">Right</button>
+          </div>
+        </section>
       </section>
-
-      <p class="footer-note">
-        Rules: two players, exact roll to reach 100, and rolling a 6 gives another turn.
-      </p>
     </main>
 
     <script type="module" src="./src/main.js"></script>
