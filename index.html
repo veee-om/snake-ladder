@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="game-shell" aria-label="Snake game">
+        <header class="hud">
+          <div>
+            <p class="eyebrow">Classic Mode</p>
+            <h1>Snake</h1>
+          </div>
+          <div class="stats" aria-live="polite">
+            <div class="stat">
+              <span>Score</span>
+              <strong id="score">0</strong>
+            </div>
+            <div class="stat">
+              <span>Status</span>
+              <strong id="status">Ready</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls-row">
+          <p class="instructions">
+            Use arrow keys or WASD to move. Press space to pause and restart after game over.
+          </p>
+          <button id="restart-button" class="button" type="button">Restart</button>
+        </section>
+
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="Snake board"></div>
+          <div id="game-over-overlay" class="overlay" hidden>
+            <div class="overlay__card" role="alert" aria-live="assertive">
+              <p class="overlay__eyebrow">Game Over</p>
+              <h2>You hit yourself</h2>
+              <p>Press restart or tap space to play again.</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="mobile-controls" aria-label="On-screen controls">
+          <button class="button control up" data-direction="up" type="button">Up</button>
+          <div class="mobile-controls__row">
+            <button class="button control" data-direction="left" type="button">Left</button>
+            <button class="button control" data-direction="down" type="button">Down</button>
+            <button class="button control" data-direction="right" type="button">Right</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
