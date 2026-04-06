@@ -2,11 +2,108 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=./Snake%20and%20Ladder/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vyom ki Saanp Seedhi</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <p>Redirecting to <a href="./Snake%20and%20Ladder/">Vyom ki Saanp Seedhi</a>...</p>
+    <main class="app" id="app-shell" data-mode="lobby">
+      <section class="hero">
+        <p class="hero__eyebrow">Vyom ki Saanp Seedhi</p>
+        <h1>Vyom ki Saanp Seedhi</h1>
+        <p class="hero__copy">
+          Create a room, share the code, and take turns rolling dice on the same live board.
+        </p>
+      </section>
+
+      <section class="panel panel--lobby" id="lobby-panel">
+        <div class="lobby-switch" role="tablist" aria-label="Lobby mode">
+          <button class="switch-button switch-button--active" id="show-create" type="button" aria-selected="true">
+            Create room
+          </button>
+          <button class="switch-button" id="show-join" type="button" aria-selected="false">
+            Join room
+          </button>
+        </div>
+
+        <p class="backend-note" id="backend-note" hidden></p>
+
+        <div class="panel__block">
+          <h2 id="lobby-title">Create room</h2>
+          <p class="muted" id="lobby-copy">Start a new room, then share the room code with the second player.</p>
+          <form id="create-form" class="stack">
+            <label class="field">
+              <span>Your name</span>
+              <input id="player-name" name="name" maxlength="20" placeholder="Player one" required />
+            </label>
+            <button class="button" type="submit">Create room</button>
+          </form>
+        </div>
+
+        <div class="panel__block" id="join-panel" hidden>
+          <h2>Join room</h2>
+          <form id="join-form" class="stack">
+            <label class="field">
+              <span>Your name</span>
+              <input id="join-name" name="join-name" maxlength="20" placeholder="Player two" required />
+            </label>
+            <label class="field">
+              <span>Room code</span>
+              <input id="join-code" name="room-code" maxlength="4" placeholder="AB12" required />
+            </label>
+            <button class="button button--ghost" type="submit">Join room</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel panel--room" id="room-panel" hidden>
+        <div class="room-header">
+          <div>
+            <p class="hero__eyebrow">Room <strong id="room-code">----</strong></p>
+            <h2 id="room-status">Waiting</h2>
+            <p id="room-hint" class="muted"></p>
+          </div>
+          <div class="room-actions">
+            <button class="button" id="action-button" type="button">Roll dice</button>
+            <button class="button button--ghost" id="leave-button" type="button">Leave</button>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <article class="status-card">
+            <span>You</span>
+            <strong id="your-name">Player</strong>
+          </article>
+          <article class="status-card">
+            <span>Turn</span>
+            <strong id="turn-label">Lobby open</strong>
+          </article>
+          <article class="status-card">
+            <span>Last dice</span>
+            <strong id="dice-value">–</strong>
+          </article>
+          <article class="status-card">
+            <span>Board</span>
+            <strong><span id="board-size">100</span> squares</strong>
+          </article>
+        </div>
+
+        <p class="banner" id="banner" aria-live="polite"></p>
+        <p class="move-summary" id="move-summary">No dice rolled yet.</p>
+
+        <div class="game-grid">
+          <section class="players" id="players" aria-label="Players"></section>
+          <section class="board-shell">
+            <div id="board" class="board" aria-label="Snakes and Ladders board"></div>
+          </section>
+        </div>
+      </section>
+
+      <p class="footer-note">
+        Rules: two players, exact roll to reach 100, and rolling a 6 gives another turn.
+      </p>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>
