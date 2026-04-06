@@ -17,8 +17,20 @@
       </section>
 
       <section class="panel panel--lobby" id="lobby-panel">
+        <div class="lobby-switch" role="tablist" aria-label="Lobby mode">
+          <button class="switch-button switch-button--active" id="show-create" type="button" aria-selected="true">
+            Create room
+          </button>
+          <button class="switch-button" id="show-join" type="button" aria-selected="false">
+            Join room
+          </button>
+        </div>
+
+        <p class="backend-note" id="backend-note" hidden></p>
+
         <div class="panel__block">
-          <h2>Create room</h2>
+          <h2 id="lobby-title">Create room</h2>
+          <p class="muted" id="lobby-copy">Start a new room, then share the room code with the second player.</p>
           <form id="create-form" class="stack">
             <label class="field">
               <span>Your name</span>
@@ -28,7 +40,7 @@
           </form>
         </div>
 
-        <div class="panel__block">
+        <div class="panel__block" id="join-panel" hidden>
           <h2>Join room</h2>
           <form id="join-form" class="stack">
             <label class="field">

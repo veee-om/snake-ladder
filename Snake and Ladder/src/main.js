@@ -6,12 +6,18 @@ const boardCells = buildBoardCells();
 const elements = {
   createForm: document.querySelector("#create-form"),
   joinForm: document.querySelector("#join-form"),
+  showCreateButton: document.querySelector("#show-create"),
+  showJoinButton: document.querySelector("#show-join"),
   nameInput: document.querySelector("#player-name"),
   joinNameInput: document.querySelector("#join-name"),
   joinCodeInput: document.querySelector("#join-code"),
+  joinPanel: document.querySelector("#join-panel"),
   appShell: document.querySelector("#app-shell"),
   lobbyPanel: document.querySelector("#lobby-panel"),
   roomPanel: document.querySelector("#room-panel"),
+  lobbyTitle: document.querySelector("#lobby-title"),
+  lobbyCopy: document.querySelector("#lobby-copy"),
+  backendNote: document.querySelector("#backend-note"),
   board: document.querySelector("#board"),
   roomCode: document.querySelector("#room-code"),
   roomStatus: document.querySelector("#room-status"),
@@ -31,8 +37,17 @@ const state = {
   playerId: null,
   playerName: "",
   room: null,
-  events: null
+  events: null,
+  lobbyMode: "create"
 };
+
+elements.showCreateButton.addEventListener("click", () => {
+  setLobbyMode("create");
+});
+
+elements.showJoinButton.addEventListener("click", () => {
+  setLobbyMode("join");
+});
 
 elements.createForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -86,6 +101,8 @@ elements.leaveButton.addEventListener("click", () => {
 });
 
 renderBoard();
+setLobbyMode("create");
+showBackendHintIfNeeded();
 restoreSession();
 
 async function createRoom(name) {
@@ -193,6 +210,7 @@ function syncRoom(room) {
 
   if (!inRoom) {
     updateBoardTokens([]);
+    renderLobbyCopy();
     return;
   }
 
@@ -207,6 +225,28 @@ function syncRoom(room) {
   renderPlayers(room);
   updateBoardTokens(room.players);
   renderAction(room);
+}
+
+function setLobbyMode(mode) {
+  state.lobbyMode = mode;
+  const isCreate = mode === "create";
+  elements.joinPanel.hidden = isCreate;
+  elements.showCreateButton.classList.toggle("switch-button--active", isCreate);
+  elements.showJoinButton.classList.toggle("switch-button--active", !isCreate);
+  elements.showCreateButton.setAttribute("aria-selected", String(isCreate));
+  elements.showJoinButton.setAttribute("aria-selected", String(!isCreate));
+  renderLobbyCopy();
+}
+
+function renderLobbyCopy() {
+  if (state.lobbyMode === "create") {
+    elements.lobbyTitle.textContent = "Create room";
+    elements.lobbyCopy.textContent = "Start a new room, then share the room code with the second player.";
+    return;
+  }
+
+  elements.lobbyTitle.textContent = "Join a room";
+  elements.lobbyCopy.textContent = "Enter the room code from player one to join the same live match.";
 }
 
 function renderPlayers(room) {
@@ -356,13 +396,28 @@ function setBanner(message) {
   elements.banner.textContent = message;
 }
 
+function showBackendHintIfNeeded() {
+  if (!window.location.hostname.endsWith("github.io")) {
+    return;
+  }
+
+  elements.backendNote.hidden = false;
+  elements.backendNote.textContent =
+    "This page is running as static hosting only. Room codes need the Node backend, so create/join will not work here unless /api is deployed too.";
+}
+
 async function requestJson(url, options = {}) {
-  const response = await window.fetch(url, {
-    headers: {
-      "Content-Type": "application/json"
-    },
-    ...options
-  });
+  let response;
+  try {
+    response = await window.fetch(url, {
+      headers: {
+        "Content-Type": "application/json"
+      },
+      ...options
+    });
+  } catch (error) {
+    throw new Error(getBackendUnavailableMessage());
+  }
 
   const payload = await response.json();
   if (!response.ok) {
@@ -374,6 +429,10 @@ async function requestJson(url, options = {}) {
   }
 
   return payload;
+}
+
+function getBackendUnavailableMessage() {
+  return "Room creation needs the backend server. Run `npm run dev` in the `Snake and Ladder` folder or deploy `server.js` to a Node host.";
 }
 
 document.querySelector("#board-size").textContent = String(BOARD_SIZE);

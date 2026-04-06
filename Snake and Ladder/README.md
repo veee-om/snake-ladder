@@ -19,6 +19,8 @@ npm run dev
 
 Then open [http://localhost:4173](http://localhost:4173).
 
+Important: room codes come from the Node backend in `server.js`. A static host like GitHub Pages can show the frontend, but it cannot create rooms unless the backend is deployed too.
+
 ## How To Play
 
 1. Player one creates a room and shares the code.
