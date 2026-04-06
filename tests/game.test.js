@@ -1,91 +1,118 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createInitialState, getRandomEmptyCell, queueDirection, stepGame } from "../src/game.js";
+import { addPlayer, buildBoardCells, canPlayerRoll, createRoomState, rollDice, serializeRoomForPlayer } from "../src/game.js";
 
-test("moves the snake one cell in the queued direction", () => {
-  const state = createInitialState(8);
-  const nextState = stepGame(state);
+test("starts the match when the second player joins", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
 
-  assert.deepEqual(nextState.snake[0], { x: 5, y: 4 });
-  assert.equal(nextState.status, "running");
+  assert.equal(room.status, "playing");
+  assert.equal(room.players.length, 2);
+  assert.equal(room.players[0].position, 1);
 });
 
-test("prevents reversing direction into the snake body", () => {
-  const state = createInitialState(8);
-  const queuedDirection = queueDirection(state, "left");
+test("prevents rolling before both players are in the room", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
 
-  assert.equal(queuedDirection, "right");
+  assert.equal(canPlayerRoll(room, "player-1"), false);
 });
 
-test("grows and increases score when food is eaten", () => {
-  const state = {
-    ...createInitialState(8),
-    food: { x: 5, y: 4 }
+test("moves a player forward and hands over the turn", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
+
+  const nextRoom = rollDice(room, "player-1", 0.33);
+
+  assert.equal(nextRoom.players[0].position, 3);
+  assert.equal(nextRoom.currentTurn, 1);
+  assert.equal(nextRoom.lastRoll.dice, 2);
+});
+
+test("grants another turn on a roll of six", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
+
+  const nextRoom = rollDice(room, "player-1", 0.99);
+
+  assert.equal(nextRoom.players[0].position, 7);
+  assert.equal(nextRoom.currentTurn, 0);
+  assert.equal(nextRoom.lastRoll.keepsTurn, true);
+});
+
+test("applies ladders and snakes", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
+
+  const ladderRoom = rollDice(room, "player-1", 0.34);
+  assert.equal(ladderRoom.players[0].position, 14);
+  assert.equal(ladderRoom.lastRoll.movementType, "ladder");
+
+  const snakeReady = {
+    ...ladderRoom,
+    currentTurn: 0,
+    players: ladderRoom.players.map((player, index) =>
+      index === 0 ? { ...player, position: 16 } : player
+    )
+  };
+  const snakeRoom = rollDice(snakeReady, "player-1", 0);
+
+  assert.equal(snakeRoom.players[0].position, 7);
+  assert.equal(snakeRoom.lastRoll.movementType, "snake");
+});
+
+test("requires an exact roll to finish", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
+  room = {
+    ...room,
+    players: room.players.map((player, index) =>
+      index === 0 ? { ...player, position: 98 } : player
+    )
   };
 
-  const nextState = stepGame(state, [0]);
+  const overshootRoom = rollDice(room, "player-1", 0.66);
+  assert.equal(overshootRoom.players[0].position, 98);
 
-  assert.equal(nextState.score, 1);
-  assert.equal(nextState.snake.length, 4);
-  assert.notDeepEqual(nextState.food, { x: 5, y: 4 });
-});
-
-test("wraps the snake to the opposite side when it crosses a wall", () => {
-  const state = {
-    ...createInitialState(4),
-    snake: [{ x: 3, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 1 }],
-    direction: "right",
-    queuedDirection: "right",
-    food: { x: 0, y: 0 },
-    status: "running"
-  };
-
-  const nextState = stepGame(state);
-
-  assert.equal(nextState.status, "running");
-  assert.deepEqual(nextState.snake[0], { x: 0, y: 1 });
-});
-
-test("ends the game when the snake runs into itself", () => {
-  const state = {
-    ...createInitialState(6),
-    snake: [
-      { x: 2, y: 2 },
-      { x: 3, y: 2 },
-      { x: 3, y: 3 },
-      { x: 2, y: 3 },
-      { x: 1, y: 3 },
-      { x: 1, y: 2 },
-      { x: 1, y: 1 },
-      { x: 2, y: 1 }
-    ],
-    direction: "left",
-    queuedDirection: "left",
-    food: { x: 5, y: 5 },
-    status: "running"
-  };
-
-  const nextState = stepGame(state);
-
-  assert.equal(nextState.status, "game-over");
-});
-
-test("places food only on empty cells", () => {
-  const food = getRandomEmptyCell(
-    3,
-    [
-      { x: 0, y: 0 },
-      { x: 1, y: 0 },
-      { x: 2, y: 0 },
-      { x: 0, y: 1 },
-      { x: 1, y: 1 },
-      { x: 2, y: 1 },
-      { x: 0, y: 2 },
-      { x: 1, y: 2 }
-    ],
-    [0]
+  const winningRoom = rollDice(
+    {
+      ...room,
+      players: room.players.map((player, index) =>
+        index === 0 ? { ...player, position: 94 } : player
+      )
+    },
+    "player-1",
+    0.99
   );
 
-  assert.deepEqual(food, { x: 2, y: 2 });
+  assert.equal(winningRoom.players[0].position, 100);
+  assert.equal(winningRoom.status, "finished");
+  assert.equal(winningRoom.winnerId, "player-1");
+});
+
+test("serializes room state for the current player", () => {
+  let room = createRoomState("AB12");
+  room = addPlayer(room, "Asha", "player-1");
+  room = addPlayer(room, "Rohan", "player-2");
+
+  const view = serializeRoomForPlayer(room, "player-2");
+
+  assert.equal(view.you.name, "Rohan");
+  assert.equal(view.currentTurnPlayerId, "player-1");
+});
+
+test("builds a 10 by 10 serpentine board", () => {
+  const cells = buildBoardCells();
+  const start = cells.find((cell) => cell.value === 1);
+  const end = cells.find((cell) => cell.value === 100);
+
+  assert.equal(cells.length, 100);
+  assert.deepEqual(start, { value: 1, row: 0, column: 0, destination: null });
+  assert.deepEqual(end, { value: 100, row: 9, column: 0, destination: null });
 });
