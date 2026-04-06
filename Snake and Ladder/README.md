@@ -1,4 +1,4 @@
-# Snakes and Ladders Rooms
+# Vyom ki Saanp Seedhi
 
 A lightweight two-player Snakes and Ladders game with a small Node backend for room-based multiplayer.
 
