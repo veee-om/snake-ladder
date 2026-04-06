@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vyom ki Saanp Seedhi</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app" id="app-shell" data-mode="setup">
+      <section class="hero">
+        <p class="hero__eyebrow">Pass and play</p>
+        <h1>Vyom ki Saanp Seedhi</h1>
+        <p class="hero__copy">
+          Play local Saanp Seedhi with 2 to 4 players on the same phone, tablet, or laptop. Roll, pass the device, and keep the race going.
+        </p>
+      </section>
+
+      <section class="panel panel--setup" id="setup-panel">
+        <div class="panel__block">
+          <h2>Set up the table</h2>
+          <p class="muted">Pick your player count, add names, and start a local match right on this screen.</p>
+
+          <form id="setup-form" class="stack">
+            <label class="field">
+              <span>Number of players</span>
+              <select id="player-count" name="player-count">
+                <option value="2">2 players</option>
+                <option value="3">3 players</option>
+                <option value="4">4 players</option>
+              </select>
+            </label>
+
+            <div class="setup-grid" id="player-fields"></div>
+
+            <button class="button" type="submit">Start game</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel panel--game" id="game-panel" hidden>
+        <div class="room-header">
+          <div>
+            <p class="hero__eyebrow">Local match</p>
+            <h2 id="game-status">2 player match</h2>
+            <p id="game-hint" class="muted"></p>
+          </div>
+          <div class="room-actions">
+            <button class="button" id="action-button" type="button">Roll dice</button>
+            <button class="button button--ghost" id="reset-button" type="button">Play again</button>
+            <button class="button button--ghost" id="setup-button" type="button">Back to setup</button>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <article class="status-card">
+            <span>Turn</span>
+            <strong id="turn-label">Player 1's turn</strong>
+          </article>
+          <article class="status-card">
+            <span>Last dice</span>
+            <strong id="dice-value">–</strong>
+          </article>
+          <article class="status-card">
+            <span>Board</span>
+            <strong><span id="board-size">100</span> squares</strong>
+          </article>
+          <article class="status-card">
+            <span>Style</span>
+            <strong>Pass and play</strong>
+          </article>
+        </div>
+
+        <p class="banner" id="banner" aria-live="polite"></p>
+        <p class="move-summary" id="move-summary">Choose your players and roll to start the match.</p>
+
+        <div class="game-grid">
+          <section class="players" id="players" aria-label="Players"></section>
+          <section class="board-shell">
+            <div id="board" class="board" aria-label="Snakes and Ladders board"></div>
+          </section>
+        </div>
+      </section>
+
+      <p class="footer-note">
+        Rules: 2 to 4 local players, exact roll to reach 100, and rolling a 6 gives another turn.
+      </p>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

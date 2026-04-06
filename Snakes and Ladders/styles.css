@@ -1,6 +1,5 @@
 :root {
   color-scheme: light;
-  --bg: #f3efe3;
   --ink: #1f2a1f;
   --muted: #5f6656;
   --panel: rgba(252, 248, 240, 0.88);
@@ -9,8 +8,10 @@
   --sun-deep: #cc6b12;
   --leaf: #2a9d8f;
   --leaf-deep: #186b61;
-  --snake: #cc444b;
-  --ladder: #3a86ff;
+  --berry: #d72660;
+  --berry-deep: #8d1740;
+  --sky: #3a86ff;
+  --sky-deep: #2254a8;
   --tile: rgba(255, 255, 255, 0.7);
   --tile-alt: rgba(239, 232, 212, 0.85);
   --shadow: 0 28px 60px rgba(43, 57, 45, 0.14);
@@ -67,7 +68,8 @@ h1 {
 .muted,
 .footer-note,
 .move-summary,
-.player-card__meta {
+.player-card__meta,
+.banner {
   color: var(--muted);
 }
 
@@ -79,44 +81,9 @@ h1 {
   backdrop-filter: blur(16px);
 }
 
-.panel--lobby {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
+.panel--setup,
+.panel--game {
   padding: 20px;
-}
-
-.lobby-switch {
-  display: inline-grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.switch-button {
-  appearance: none;
-  border: 1px solid rgba(53, 79, 53, 0.14);
-  border-radius: 999px;
-  padding: 12px 16px;
-  font: inherit;
-  font-weight: 700;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.72);
-  cursor: pointer;
-}
-
-.switch-button--active {
-  color: #fffaf3;
-  background: linear-gradient(135deg, var(--leaf) 0%, var(--leaf-deep) 100%);
-  box-shadow: 0 14px 28px rgba(24, 107, 97, 0.18);
-}
-
-.backend-note {
-  margin: 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  color: #6b261f;
-  background: rgba(255, 232, 214, 0.92);
-  border: 1px solid rgba(204, 107, 18, 0.22);
 }
 
 .panel__block,
@@ -132,9 +99,39 @@ h1 {
   padding: 20px;
 }
 
-.stack {
+.stack,
+.setup-grid,
+.room-header,
+.status-grid,
+.game-grid,
+.room-actions,
+.players {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+}
+
+.setup-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.room-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.room-actions {
+  grid-auto-flow: column;
+}
+
+.status-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.game-grid {
+  grid-template-columns: 290px minmax(0, 1fr);
+  align-items: start;
 }
 
 .field {
@@ -143,7 +140,8 @@ h1 {
   font-weight: 600;
 }
 
-.field input {
+.field input,
+.field select {
   border: 1px solid rgba(53, 79, 53, 0.16);
   border-radius: 14px;
   padding: 14px 16px;
@@ -181,38 +179,12 @@ h1 {
   box-shadow: 0 14px 28px rgba(204, 107, 18, 0.16);
 }
 
-.panel--room {
-  padding: 20px;
-}
-
-.room-header,
-.status-grid,
-.game-grid,
-.room-actions {
-  display: grid;
-  gap: 16px;
-}
-
-.room-header {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  margin-bottom: 18px;
-}
-
-.room-actions {
-  grid-auto-flow: column;
-}
-
-.status-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 14px;
-}
-
 .status-card {
   padding: 16px;
 }
 
-.status-card span {
+.status-card span,
+.player-card__label {
   display: block;
   margin-bottom: 8px;
   font-size: 0.78rem;
@@ -226,13 +198,7 @@ h1 {
   min-height: 1.5em;
 }
 
-.game-grid {
-  grid-template-columns: 290px minmax(0, 1fr);
-  align-items: start;
-}
-
 .players {
-  display: grid;
   gap: 12px;
 }
 
@@ -248,14 +214,6 @@ h1 {
 .player-card--winner {
   border-color: rgba(255, 159, 28, 0.4);
   background: rgba(255, 244, 223, 0.92);
-}
-
-.player-card__label {
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.74rem;
-  color: var(--muted);
 }
 
 .player-card h3 {
@@ -332,12 +290,21 @@ h1 {
   background: linear-gradient(135deg, var(--leaf) 0%, var(--leaf-deep) 100%);
 }
 
+.token--berry {
+  background: linear-gradient(135deg, var(--berry) 0%, var(--berry-deep) 100%);
+}
+
+.token--sky {
+  background: linear-gradient(135deg, var(--sky) 0%, var(--sky-deep) 100%);
+}
+
 .footer-note {
   margin-top: 16px;
   text-align: center;
 }
 
 @media (max-width: 960px) {
+  .setup-grid,
   .game-grid,
   .status-grid,
   .room-header {
@@ -379,5 +346,13 @@ h1 {
     width: 22px;
     height: 22px;
     font-size: 0.7rem;
+  }
+
+  .panel--setup,
+  .panel--game,
+  .panel__block,
+  .board-shell,
+  .player-card {
+    padding: 14px;
   }
 }
