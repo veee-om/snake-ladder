@@ -1,16 +1,15 @@
-# Snake
+# Snakes and Ladders Rooms
 
-A small classic Snake game built as a lightweight static web app.
+A lightweight two-player Snakes and Ladders game with a small Node backend for room-based multiplayer.
 
 ## Features
 
-- Grid-based snake movement
-- Food spawning and snake growth
-- Score tracking
-- Wraparound movement across board edges
-- Game over on self-collision
-- Keyboard controls and on-screen mobile controls
-- Restart and pause support
+- Create a room and share the 4-character code
+- Join as player two from another browser tab or device
+- In-memory room state with turn-based validation on the backend
+- Live room updates over Server-Sent Events
+- Exact-roll finish rule and extra turn on a 6
+- Visual board with marked snake and ladder squares
 
 ## Run Locally
 
@@ -20,12 +19,13 @@ npm run dev
 
 Then open [http://localhost:4173](http://localhost:4173).
 
-## Controls
+## How To Play
 
-- Arrow keys: move
-- `W`, `A`, `S`, `D`: move
-- `Space`: pause or resume
-- `Restart`: reset the game
+1. Player one creates a room and shares the code.
+2. Player two joins using the same code.
+3. Players take turns rolling the dice.
+4. Landing on a ladder moves you up. Landing on a snake sends you down.
+5. You must land exactly on square 100 to win.
 
 ## Test
 
@@ -33,20 +33,11 @@ Then open [http://localhost:4173](http://localhost:4173).
 npm test
 ```
 
-## Manual Verification
-
-- The snake starts moving when you press an arrow key or `WASD`.
-- The snake wraps to the opposite side when crossing an edge.
-- Eating food increases both score and snake length.
-- The game ends only when the snake collides with itself.
-- The red game-over overlay appears after self-collision.
-- `Space` pauses and resumes the game.
-- `Restart` resets the board, score, and snake position.
-
 ## Project Structure
 
-- `index.html`: game shell
-- `styles.css`: minimal styling
-- `src/game.js`: core game logic
-- `src/main.js`: rendering and input handling
-- `tests/game.test.js`: logic tests
+- `server.js`: Node server, room API, SSE updates, static file serving
+- `src/game.js`: shared Snakes and Ladders rules and board helpers
+- `src/main.js`: browser UI and multiplayer room flow
+- `index.html`: game layout
+- `styles.css`: responsive visual design
+- `tests/game.test.js`: game-rule tests
