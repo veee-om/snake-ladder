@@ -21,7 +21,11 @@ const elements = {
   boardLegend: document.querySelector("#board-legend"),
   moveSummary: document.querySelector("#move-summary"),
   players: document.querySelector("#players"),
-  banner: document.querySelector("#banner")
+  banner: document.querySelector("#banner"),
+  winnerModal: document.querySelector("#winner-modal"),
+  winnerTitle: document.querySelector("#winner-title"),
+  winnerText: document.querySelector("#winner-text"),
+  winnerButton: document.querySelector("#winner-button")
 };
 
 const state = {
@@ -81,7 +85,20 @@ elements.setupButton.addEventListener("click", () => {
   elements.setupPanel.hidden = false;
   elements.gamePanel.hidden = true;
   updateBoardTokens([]);
+  hideWinnerModal();
   setBanner("");
+});
+
+elements.winnerButton.addEventListener("click", () => {
+  if (!state.game) {
+    return;
+  }
+
+  const names = state.game.players.map((player) => player.name);
+  state.game = createLocalGame(names);
+  hideWinnerModal();
+  setBanner("Fresh round started with the same players.");
+  syncGame();
 });
 
 renderBoard();
@@ -131,6 +148,7 @@ function syncGame() {
 
   renderPlayers(state.game);
   updateBoardTokens(state.game.players);
+  renderWinnerModal(state.game);
 }
 
 function renderPlayers(game) {
@@ -268,6 +286,23 @@ function getMoveSummary(game) {
 
 function setBanner(message) {
   elements.banner.textContent = message;
+}
+
+function renderWinnerModal(game) {
+  const winner = game.players.find((player) => player.id === game.winnerId);
+  const isVisible = game.status === "finished" && Boolean(winner);
+  elements.winnerModal.classList.toggle("hidden", !isVisible);
+
+  if (!winner) {
+    return;
+  }
+
+  elements.winnerTitle.textContent = `${winner.name} wins!`;
+  elements.winnerText.textContent = `${winner.name} reached square 100 first. Tap below to start another round.`;
+}
+
+function hideWinnerModal() {
+  elements.winnerModal.classList.add("hidden");
 }
 
 function defaultName(index) {

@@ -421,3 +421,40 @@ h1 {
     font-size: 0.8rem;
   }
 }
+
+
+.winner-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(74, 38, 13, 0.38);
+  backdrop-filter: blur(8px);
+  z-index: 30;
+}
+
+.winner-modal.hidden {
+  display: none;
+}
+
+.winner-modal__card {
+  width: min(100%, 420px);
+  padding: 24px;
+  text-align: center;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 246, 214, 0.98), rgba(255, 232, 185, 0.96));
+  border: 3px solid rgba(139, 94, 52, 0.3);
+  box-shadow: 0 24px 48px rgba(74, 38, 13, 0.24);
+}
+
+.winner-modal__card h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.winner-modal__card p:last-of-type {
+  margin-bottom: 18px;
+  color: var(--muted);
+  line-height: 1.5;
+}
