@@ -87,7 +87,7 @@ elements.setupButton.addEventListener("click", () => {
 renderBoard();
 renderPlayerFields();
 elements.boardSize.textContent = String(BOARD_SIZE);
-elements.boardLegend.textContent = "🐍 Snake slide  •  🪜 Ladder climb";
+elements.boardLegend.textContent = "🐍 Saanp slide  •  🪜 Seedhi climb";
 
 function renderPlayerFields() {
   elements.playerFields.replaceChildren();
@@ -127,7 +127,7 @@ function syncGame() {
   elements.diceValue.textContent = state.game.lastRoll ? String(state.game.lastRoll.dice) : "–";
   elements.moveSummary.textContent = getMoveSummary(state.game);
   elements.actionButton.disabled = state.game.status === "finished";
-  elements.actionButton.textContent = state.game.status === "finished" ? "Match finished" : "Roll dice";
+  elements.actionButton.textContent = state.game.status === "finished" ? "🏁 Match finished" : "🎲 Roll dice";
 
   renderPlayers(state.game);
   updateBoardTokens(state.game.players);
@@ -173,6 +173,14 @@ function renderBoard() {
 
     if (cell.destination) {
       tile.classList.add(cell.destination > cell.value ? "tile--ladder" : "tile--snake");
+    }
+
+    tile.classList.add((cell.row + cell.column) % 2 === 0 ? "tile--warm" : "tile--cool");
+    if (cell.value === 1) {
+      tile.classList.add("tile--start");
+    }
+    if (cell.value === BOARD_SIZE) {
+      tile.classList.add("tile--finish");
     }
 
     const number = document.createElement("span");
