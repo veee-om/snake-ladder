@@ -1,6 +1,6 @@
 export const BOARD_SIZE = 100;
 export const MIN_PLAYERS = 2;
-export const MAX_PLAYERS = 2;
+export const MAX_PLAYERS = 4;
 export const STARTING_POSITION = 1;
 
 export const TRANSPORTS = {
@@ -22,125 +22,81 @@ export const TRANSPORTS = {
   99: 78
 };
 
-const PLAYER_COLORS = ["sun", "leaf"];
-const PLAYER_TOKENS = ["A", "B"];
+const PLAYER_COLORS = ["sun", "leaf", "berry", "sky"];
+const PLAYER_TOKENS = ["A", "B", "C", "D"];
 
-export function createRoomGame(hostName, options = {}) {
-  const idFactory = options.idFactory ?? defaultIdFactory;
-  const host = createPlayer(hostName, 0, idFactory);
+export function createLocalGame(playerNames) {
+  if (!Array.isArray(playerNames)) {
+    throw new Error("Player list is required.");
+  }
+
+  const cleanedNames = playerNames
+    .map((name) => String(name || "").trim())
+    .filter(Boolean)
+    .map((name) => name.slice(0, 20));
+
+  if (cleanedNames.length < MIN_PLAYERS || cleanedNames.length > MAX_PLAYERS) {
+    throw new Error(`Choose between ${MIN_PLAYERS} and ${MAX_PLAYERS} players.`);
+  }
 
   return {
-    status: "waiting",
-    players: [host],
+    status: "playing",
+    players: cleanedNames.map((name, index) => ({
+      id: `player-${index + 1}`,
+      name,
+      position: STARTING_POSITION,
+      token: PLAYER_TOKENS[index],
+      color: PLAYER_COLORS[index]
+    })),
     currentTurn: 0,
     lastRoll: null,
     winnerId: null
   };
 }
 
-export function addPlayerToGame(gameState, playerName, options = {}) {
-  validateGameState(gameState);
-  const cleanedName = sanitizePlayerName(playerName);
-  const idFactory = options.idFactory ?? defaultIdFactory;
-
-  if (gameState.players.length >= MAX_PLAYERS) {
-    throw new Error("This room is already full.");
-  }
-
-  const joiningPlayer = createPlayer(cleanedName, gameState.players.length, idFactory);
-  const players = [...gameState.players, joiningPlayer];
-
-  return {
-    ...gameState,
-    players,
-    status: players.length === MIN_PLAYERS ? "playing" : "waiting",
-    currentTurn: 0,
-    lastRoll: null,
-    winnerId: null
-  };
-}
-
-export function rollForPlayer(gameState, playerId, randomValue = Math.random()) {
-  validateGameState(gameState);
-
-  if (gameState.status === "waiting") {
-    throw new Error("Waiting for another player to join.");
-  }
-
+export function rollTurn(gameState, randomValue = Math.random()) {
   if (gameState.status === "finished") {
     throw new Error("This game is already finished.");
   }
 
-  const activePlayer = gameState.players[gameState.currentTurn];
-  if (!activePlayer || activePlayer.id !== playerId) {
-    throw new Error("It is not your turn yet.");
-  }
-
   const dice = Math.max(1, Math.min(6, Math.floor(randomValue * 6) + 1));
-  const attemptedPosition = activePlayer.position + dice;
-  const landedPosition = attemptedPosition <= BOARD_SIZE ? attemptedPosition : activePlayer.position;
+  const player = gameState.players[gameState.currentTurn];
+  const attemptedPosition = player.position + dice;
+  const landedPosition = attemptedPosition <= BOARD_SIZE ? attemptedPosition : player.position;
   const transportTarget = TRANSPORTS[landedPosition] ?? landedPosition;
   const movementType =
     transportTarget > landedPosition ? "ladder" : transportTarget < landedPosition ? "snake" : "move";
   const didWin = transportTarget === BOARD_SIZE;
   const keepsTurn = dice === 6 && !didWin;
 
-  const players = gameState.players.map((player) =>
-    player.id === playerId
+  const players = gameState.players.map((entry, index) =>
+    index === gameState.currentTurn
       ? {
-          ...player,
+          ...entry,
           position: transportTarget
         }
-      : player
+      : entry
   );
 
   return {
     ...gameState,
     players,
-    currentTurn: didWin ? gameState.currentTurn : keepsTurn ? gameState.currentTurn : getNextTurn(gameState),
+    currentTurn: didWin
+      ? gameState.currentTurn
+      : keepsTurn
+        ? gameState.currentTurn
+        : (gameState.currentTurn + 1) % gameState.players.length,
     lastRoll: {
-      playerId,
+      playerId: player.id,
       dice,
-      from: activePlayer.position,
+      from: player.position,
       to: transportTarget,
       attempted: attemptedPosition,
       movementType,
       keepsTurn
     },
     status: didWin ? "finished" : "playing",
-    winnerId: didWin ? playerId : null
-  };
-}
-
-export function restartRoomGame(gameState) {
-  validateGameState(gameState);
-
-  if (gameState.players.length < MIN_PLAYERS) {
-    throw new Error("Waiting for another player to join.");
-  }
-
-  return {
-    status: "playing",
-    players: gameState.players.map((player) => ({
-      ...player,
-      position: STARTING_POSITION
-    })),
-    currentTurn: 0,
-    lastRoll: null,
-    winnerId: null
-  };
-}
-
-export function serializeGameForPlayer(gameState, playerId) {
-  validateGameState(gameState);
-
-  return {
-    ...gameState,
-    players: gameState.players.map((player) => ({
-      ...player,
-      isSelf: player.id === playerId
-    })),
-    selfPlayerId: playerId
+    winnerId: didWin ? player.id : null
   };
 }
 
@@ -158,38 +114,4 @@ export function buildBoardCells(size = BOARD_SIZE) {
       destination: TRANSPORTS[value] ?? null
     };
   });
-}
-
-function createPlayer(name, index, idFactory) {
-  return {
-    id: idFactory(),
-    name: sanitizePlayerName(name),
-    position: STARTING_POSITION,
-    token: PLAYER_TOKENS[index],
-    color: PLAYER_COLORS[index]
-  };
-}
-
-function sanitizePlayerName(name) {
-  const cleanedName = String(name || "").trim().slice(0, 20);
-
-  if (!cleanedName) {
-    throw new Error("Player name is required.");
-  }
-
-  return cleanedName;
-}
-
-function validateGameState(gameState) {
-  if (!gameState || !Array.isArray(gameState.players)) {
-    throw new Error("Game state is invalid.");
-  }
-}
-
-function getNextTurn(gameState) {
-  return (gameState.currentTurn + 1) % gameState.players.length;
-}
-
-function defaultIdFactory() {
-  return Math.random().toString(36).slice(2, 10);
 }

@@ -1,25 +1,17 @@
-import { BOARD_SIZE, buildBoardCells } from "./game.js";
+import { BOARD_SIZE, MAX_PLAYERS, MIN_PLAYERS, buildBoardCells, createLocalGame, rollTurn } from "./game.js";
 
-const STORAGE_KEY = "vyom-ki-saanp-seedhi-session";
 const boardCells = buildBoardCells();
 
 const elements = {
   appShell: document.querySelector("#app-shell"),
-  lobbyPanel: document.querySelector("#lobby-panel"),
+  setupPanel: document.querySelector("#setup-panel"),
   gamePanel: document.querySelector("#game-panel"),
-  hostTab: document.querySelector("#host-tab"),
-  joinTab: document.querySelector("#join-tab"),
-  hostForm: document.querySelector("#host-form"),
-  joinForm: document.querySelector("#join-form"),
-  hostName: document.querySelector("#host-name"),
-  joinName: document.querySelector("#join-name"),
-  joinCode: document.querySelector("#join-code"),
-  copyRoomButton: document.querySelector("#copy-room-button"),
+  playerCount: document.querySelector("#player-count"),
+  playerFields: document.querySelector("#player-fields"),
+  setupForm: document.querySelector("#setup-form"),
   actionButton: document.querySelector("#action-button"),
   resetButton: document.querySelector("#reset-button"),
-  leaveButton: document.querySelector("#leave-button"),
-  roomCode: document.querySelector("#room-code"),
-  selfName: document.querySelector("#self-name"),
+  setupButton: document.querySelector("#setup-button"),
   board: document.querySelector("#board"),
   gameStatus: document.querySelector("#game-status"),
   gameHint: document.querySelector("#game-hint"),
@@ -37,148 +29,108 @@ const elements = {
 };
 
 const state = {
-  view: "host",
-  roomCode: "",
-  playerId: "",
   game: null,
-  eventSource: null,
-  pendingAction: false
+  playerCount: 2
 };
 
-elements.hostTab.addEventListener("click", () => setLobbyMode("host"));
-elements.joinTab.addEventListener("click", () => setLobbyMode("join"));
-
-elements.hostForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await createRoom(elements.hostName.value);
+elements.playerCount.addEventListener("change", () => {
+  state.playerCount = Number(elements.playerCount.value);
+  renderPlayerFields();
 });
 
-elements.joinForm.addEventListener("submit", async (event) => {
+elements.setupForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  await joinRoom(elements.joinName.value, elements.joinCode.value);
+
+  try {
+    const names = getPlayerNames();
+    state.game = createLocalGame(names);
+    elements.appShell.dataset.mode = "game";
+    elements.setupPanel.hidden = true;
+    elements.gamePanel.hidden = false;
+    setBanner("");
+    syncGame();
+  } catch (error) {
+    setBanner(error.message);
+  }
 });
 
-elements.copyRoomButton.addEventListener("click", async () => {
-  if (!state.roomCode) {
+elements.actionButton.addEventListener("click", () => {
+  if (!state.game) {
     return;
   }
 
   try {
-    await navigator.clipboard.writeText(state.roomCode);
-    setBanner("Room code copied. Send it to your friend.");
-  } catch {
-    setBanner(`Share this room code: ${state.roomCode}`);
+    state.game = rollTurn(state.game);
+    setBanner("");
+    syncGame();
+  } catch (error) {
+    setBanner(error.message);
   }
 });
 
-elements.actionButton.addEventListener("click", async () => {
-  if (!state.roomCode || !state.playerId || !state.game || state.pendingAction) {
+elements.resetButton.addEventListener("click", () => {
+  if (!state.game) {
     return;
   }
 
-  await postRoomAction("roll");
+  const names = state.game.players.map((player) => player.name);
+  state.game = createLocalGame(names);
+  setBanner("Fresh round started with the same players.");
+  syncGame();
 });
 
-elements.resetButton.addEventListener("click", async () => {
-  if (!state.roomCode || !state.playerId || !state.game || state.pendingAction) {
+elements.setupButton.addEventListener("click", () => {
+  state.game = null;
+  elements.appShell.dataset.mode = "setup";
+  elements.setupPanel.hidden = false;
+  elements.gamePanel.hidden = true;
+  updateBoardTokens([]);
+  hideWinnerModal();
+  setBanner("");
+});
+
+elements.winnerButton.addEventListener("click", () => {
+  if (!state.game) {
     return;
   }
 
-  await postRoomAction("reset");
-});
-
-elements.leaveButton.addEventListener("click", () => {
-  teardownSession();
-  showLobby("You left the room.");
-});
-
-elements.winnerButton.addEventListener("click", async () => {
-  if (!state.game || state.pendingAction) {
-    return;
-  }
-
-  await postRoomAction("reset");
+  const names = state.game.players.map((player) => player.name);
+  state.game = createLocalGame(names);
+  hideWinnerModal();
+  setBanner("Fresh round started with the same players.");
+  syncGame();
 });
 
 renderBoard();
+renderPlayerFields();
 elements.boardSize.textContent = String(BOARD_SIZE);
 elements.boardLegend.textContent = "🐍 Saanp slide  •  🪜 Seedhi climb";
-setLobbyMode("host");
-restoreSession();
 
-async function createRoom(playerName) {
-  setPending(true);
+function renderPlayerFields() {
+  elements.playerFields.replaceChildren();
 
-  try {
-    const session = await apiRequest("/api/rooms", {
-      method: "POST",
-      body: { playerName }
-    });
+  for (let index = 0; index < state.playerCount; index += 1) {
+    const field = document.createElement("label");
+    field.className = "field";
 
-    applySession(session);
-    setBanner("Room created. Share the code with your friend.");
-  } catch (error) {
-    setBanner(error.message);
-  } finally {
-    setPending(false);
+    const label = document.createElement("span");
+    label.textContent = `Player ${index + 1} name`;
+
+    const input = document.createElement("input");
+    input.name = `player-${index + 1}`;
+    input.maxLength = 20;
+    input.required = true;
+    input.placeholder = defaultName(index);
+
+    field.append(label, input);
+    elements.playerFields.append(field);
   }
 }
 
-async function joinRoom(playerName, roomCode) {
-  setPending(true);
-
-  try {
-    const session = await apiRequest(`/api/rooms/${normalizeRoomCode(roomCode)}/join`, {
-      method: "POST",
-      body: { playerName }
-    });
-
-    applySession(session);
-    setBanner("Joined the room. The match starts now.");
-  } catch (error) {
-    setBanner(error.message);
-  } finally {
-    setPending(false);
-  }
-}
-
-async function postRoomAction(action) {
-  setPending(true);
-
-  try {
-    const session = await apiRequest(`/api/rooms/${state.roomCode}/${action}`, {
-      method: "POST",
-      body: { playerId: state.playerId }
-    });
-
-    applyGameState(session);
-    if (action === "reset") {
-      setBanner("Fresh round started with the same players.");
-    } else {
-      setBanner("");
-    }
-  } catch (error) {
-    setBanner(error.message);
-  } finally {
-    setPending(false);
-  }
-}
-
-function applySession(session) {
-  state.roomCode = session.roomCode;
-  state.playerId = session.playerId;
-  saveSession();
-  openEventStream();
-  applyGameState(session);
-}
-
-function applyGameState(session) {
-  state.roomCode = session.roomCode;
-  state.playerId = session.playerId;
-  state.game = session.game;
-  saveSession();
-  showGame();
-  syncGame();
+function getPlayerNames() {
+  return Array.from(elements.playerFields.querySelectorAll("input")).map(
+    (input, index) => input.value.trim() || defaultName(index)
+  );
 }
 
 function syncGame() {
@@ -186,25 +138,13 @@ function syncGame() {
     return;
   }
 
-  const self = state.game.players.find((player) => player.id === state.playerId);
-  const activePlayer = state.game.players[state.game.currentTurn];
-  const canRoll =
-    state.game.status === "playing" &&
-    activePlayer?.id === state.playerId &&
-    state.game.players.length === 2 &&
-    !state.pendingAction;
-  const canReset = state.game.players.length === 2 && !state.pendingAction;
-
-  elements.roomCode.textContent = state.roomCode;
-  elements.selfName.textContent = self?.name ?? "Unknown player";
   elements.gameStatus.textContent = formatGameStatus(state.game);
-  elements.gameHint.textContent = getGameHint(state.game, self);
+  elements.gameHint.textContent = getGameHint(state.game);
   elements.turnLabel.textContent = getTurnLabel(state.game);
   elements.diceValue.textContent = state.game.lastRoll ? String(state.game.lastRoll.dice) : "–";
   elements.moveSummary.textContent = getMoveSummary(state.game);
-  elements.actionButton.disabled = !canRoll;
-  elements.actionButton.textContent = state.game.status === "waiting" ? "Waiting for friend" : "🎲 Roll dice";
-  elements.resetButton.disabled = !canReset;
+  elements.actionButton.disabled = state.game.status === "finished";
+  elements.actionButton.textContent = state.game.status === "finished" ? "🏁 Match finished" : "🎲 Roll dice";
 
   renderPlayers(state.game);
   updateBoardTokens(state.game.players);
@@ -224,13 +164,10 @@ function renderPlayers(game) {
     if (player.id === game.winnerId) {
       card.classList.add("player-card--winner");
     }
-    if (player.id === state.playerId) {
-      card.classList.add("player-card--self");
-    }
 
     const label = document.createElement("p");
     label.className = "player-card__label";
-    label.textContent = player.id === state.playerId ? "You" : `Player ${index + 1}`;
+    label.textContent = `Player ${index + 1}`;
 
     const name = document.createElement("h3");
     name.textContent = player.name;
@@ -298,70 +235,34 @@ function updateBoardTokens(players) {
   });
 }
 
-function renderWinnerModal(game) {
-  const winner = game.players.find((player) => player.id === game.winnerId);
-  const isVisible = game.status === "finished" && Boolean(winner);
-  elements.winnerModal.classList.toggle("hidden", !isVisible);
-
-  if (!winner) {
-    return;
-  }
-
-  elements.winnerTitle.textContent = `${winner.name} wins!`;
-  elements.winnerText.textContent = `${winner.name} reached square 100 first. Tap below to play another round in the same room.`;
-}
-
-function hideWinnerModal() {
-  elements.winnerModal.classList.add("hidden");
-}
-
 function formatGameStatus(game) {
-  if (game.status === "waiting") {
-    return "Waiting for your friend";
-  }
-
   if (game.status === "finished") {
     return `${game.players.find((player) => player.id === game.winnerId)?.name ?? "A player"} won`;
   }
 
-  return "2 player live match";
+  return `${game.players.length} player match`;
 }
 
-function getGameHint(game, self) {
-  if (game.status === "waiting") {
-    return `Share room code ${state.roomCode} so your friend can join this board.`;
-  }
-
+function getGameHint(game) {
   if (game.status === "finished") {
-    return "Tap Play again to start a fresh round with the same room.";
+    return "Tap Play again for the same group or Back to setup for a fresh table.";
   }
 
-  if (game.players[game.currentTurn]?.id === state.playerId) {
-    return `${self?.name ?? "You"} can roll now. A 6 gives you another turn.`;
-  }
-
-  return `${game.players[game.currentTurn]?.name ?? "Your friend"} is rolling from their device.`;
+  return "Pass the device after each turn. Roll a 6 to go again, and land exactly on 100 to win.";
 }
 
 function getTurnLabel(game) {
-  if (game.status === "waiting") {
-    return "Waiting…";
-  }
-
   if (game.status === "finished") {
     const winner = game.players.find((player) => player.id === game.winnerId);
     return `${winner?.name ?? "A player"} wins`;
   }
 
-  const activePlayer = game.players[game.currentTurn];
-  return activePlayer?.id === state.playerId ? "Your turn" : `${activePlayer?.name ?? "Friend"}'s turn`;
+  return `${game.players[game.currentTurn]?.name}'s turn`;
 }
 
 function getMoveSummary(game) {
   if (!game.lastRoll) {
-    return game.status === "waiting"
-      ? "Create a room and invite a friend to begin the live match."
-      : "Both players are ready. Roll the dice to start the race.";
+    return "Choose your players and roll to start the match.";
   }
 
   const player = game.players.find((entry) => entry.id === game.lastRoll.playerId);
@@ -387,152 +288,23 @@ function setBanner(message) {
   elements.banner.textContent = message;
 }
 
-function showLobby(message = "") {
-  state.game = null;
-  closeEventStream();
-  elements.appShell.dataset.mode = "lobby";
-  elements.lobbyPanel.hidden = false;
-  elements.gamePanel.hidden = true;
-  hideWinnerModal();
-  updateBoardTokens([]);
-  setBanner(message);
-}
+function renderWinnerModal(game) {
+  const winner = game.players.find((player) => player.id === game.winnerId);
+  const isVisible = game.status === "finished" && Boolean(winner);
+  elements.winnerModal.classList.toggle("hidden", !isVisible);
 
-function showGame() {
-  elements.appShell.dataset.mode = "game";
-  elements.lobbyPanel.hidden = true;
-  elements.gamePanel.hidden = false;
-}
-
-function setLobbyMode(view) {
-  state.view = view;
-  const isHost = view === "host";
-
-  elements.hostTab.classList.toggle("is-active", isHost);
-  elements.joinTab.classList.toggle("is-active", !isHost);
-  elements.hostForm.hidden = !isHost;
-  elements.joinForm.hidden = isHost;
-}
-
-function setPending(isPending) {
-  state.pendingAction = isPending;
-  elements.hostForm.querySelector("button").disabled = isPending;
-  elements.joinForm.querySelector("button").disabled = isPending;
-
-  if (state.game) {
-    syncGame();
-  }
-}
-
-function normalizeRoomCode(value) {
-  return String(value || "").trim().toUpperCase();
-}
-
-async function apiRequest(url, options = {}) {
-  const response = await fetch(url, {
-    method: options.method ?? "GET",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error ?? "Something went wrong.");
+  if (!winner) {
+    return;
   }
 
-  return payload;
+  elements.winnerTitle.textContent = `${winner.name} wins!`;
+  elements.winnerText.textContent = `${winner.name} reached square 100 first. Tap below to start another round.`;
 }
 
-function openEventStream() {
-  closeEventStream();
-
-  const eventSource = new EventSource(
-    `/api/rooms/${state.roomCode}/events?playerId=${encodeURIComponent(state.playerId)}`
-  );
-
-  eventSource.addEventListener("room", (event) => {
-    const session = JSON.parse(event.data);
-    applyGameState(session);
-  });
-
-  eventSource.onerror = async () => {
-    closeEventStream();
-
-    if (!state.roomCode || !state.playerId) {
-      return;
-    }
-
-    try {
-      const session = await apiRequest(
-        `/api/rooms/${state.roomCode}?playerId=${encodeURIComponent(state.playerId)}`
-      );
-      applyGameState(session);
-      openEventStream();
-    } catch {
-      teardownSession();
-      showLobby("Your room session ended. Create a new room or join again.");
-    }
-  };
-
-  state.eventSource = eventSource;
+function hideWinnerModal() {
+  elements.winnerModal.classList.add("hidden");
 }
 
-function closeEventStream() {
-  if (state.eventSource) {
-    state.eventSource.close();
-    state.eventSource = null;
-  }
-}
-
-function saveSession() {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      roomCode: state.roomCode,
-      playerId: state.playerId
-    })
-  );
-}
-
-function restoreSession() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return;
-    }
-
-    const session = JSON.parse(raw);
-    if (!session.roomCode || !session.playerId) {
-      return;
-    }
-
-    state.roomCode = session.roomCode;
-    state.playerId = session.playerId;
-    reconnectSession();
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-}
-
-async function reconnectSession() {
-  try {
-    const session = await apiRequest(
-      `/api/rooms/${state.roomCode}?playerId=${encodeURIComponent(state.playerId)}`
-    );
-    applySession(session);
-    setBanner("Reconnected to your room.");
-  } catch {
-    teardownSession();
-  }
-}
-
-function teardownSession() {
-  closeEventStream();
-  state.roomCode = "";
-  state.playerId = "";
-  state.game = null;
-  state.pendingAction = false;
-  localStorage.removeItem(STORAGE_KEY);
+function defaultName(index) {
+  return `Player ${index + 1}`;
 }
