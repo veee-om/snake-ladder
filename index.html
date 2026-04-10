@@ -7,54 +7,82 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app" id="app-shell" data-mode="setup">
+    <main class="app" id="app-shell" data-mode="lobby">
       <section class="hero">
-        <p class="hero__eyebrow">Pass and play</p>
+        <p class="hero__eyebrow">Online multiplayer</p>
         <h1>Vyom ki Saanp Seedhi</h1>
         <p class="hero__copy">
-          Play local Saanp Seedhi with 2 to 4 players on the same phone, tablet, or laptop. Roll, pass the device, and keep the race going on a classic mela-style board.
+          Create a room, share the code with a friend, and race live on the same traditional Saanp Seedhi board from different phones or laptops.
         </p>
       </section>
 
-      <section class="panel panel--setup" id="setup-panel">
+      <section class="panel panel--lobby" id="lobby-panel">
         <div class="panel__block">
-          <h2>Set up the table</h2>
-          <p class="muted">Pick your player count, add names, and start a local match right on this screen.</p>
+          <div class="mode-switch" role="tablist" aria-label="Room actions">
+            <button class="mode-switch__button is-active" id="host-tab" type="button">Create room</button>
+            <button class="mode-switch__button" id="join-tab" type="button">Join room</button>
+          </div>
 
-          <form id="setup-form" class="stack">
-            <label class="field">
-              <span>Number of players</span>
-              <select id="player-count" name="player-count">
-                <option value="2">2 players</option>
-                <option value="3">3 players</option>
-                <option value="4">4 players</option>
-              </select>
-            </label>
+          <div class="lobby-grid">
+            <form class="stack lobby-card" id="host-form">
+              <div>
+                <h2>Create a room</h2>
+                <p class="muted">You’ll get a 4-letter room code to share with one friend.</p>
+              </div>
 
-            <div class="setup-grid" id="player-fields"></div>
+              <label class="field">
+                <span>Your name</span>
+                <input id="host-name" name="host-name" maxlength="20" placeholder="Vyom" required />
+              </label>
 
-            <button class="button" type="submit">Start game</button>
-          </form>
+              <button class="button" type="submit">Create room</button>
+            </form>
+
+            <form class="stack lobby-card" id="join-form" hidden>
+              <div>
+                <h2>Join a room</h2>
+                <p class="muted">Enter the code your friend shared and jump straight into the board.</p>
+              </div>
+
+              <label class="field">
+                <span>Your name</span>
+                <input id="join-name" name="join-name" maxlength="20" placeholder="Friend" required />
+              </label>
+
+              <label class="field">
+                <span>Room code</span>
+                <input id="join-code" name="join-code" maxlength="4" placeholder="ABCD" required />
+              </label>
+
+              <button class="button" type="submit">Join room</button>
+            </form>
+          </div>
         </div>
       </section>
 
       <section class="panel panel--game" id="game-panel" hidden>
         <div class="room-header">
           <div>
-            <p class="hero__eyebrow">Local match</p>
-            <h2 id="game-status">2 player match</h2>
+            <p class="hero__eyebrow">Live room</p>
+            <h2 id="game-status">Waiting for players</h2>
             <p id="game-hint" class="muted"></p>
           </div>
-          <div class="room-actions">
-            <button class="button button--ghost" id="reset-button" type="button">Play again</button>
-            <button class="button button--ghost" id="setup-button" type="button">Back to setup</button>
+
+          <div class="room-code-card">
+            <span>Room code</span>
+            <strong id="room-code">----</strong>
+            <button class="button button--ghost button--small" id="copy-room-button" type="button">Copy code</button>
           </div>
         </div>
 
         <div class="status-grid">
           <article class="status-card">
+            <span>You</span>
+            <strong id="self-name">Waiting…</strong>
+          </article>
+          <article class="status-card">
             <span>Turn</span>
-            <strong id="turn-label">Player 1's turn</strong>
+            <strong id="turn-label">Waiting…</strong>
           </article>
           <article class="status-card">
             <span>Last dice</span>
@@ -64,14 +92,10 @@
             <span>Board</span>
             <strong><span id="board-size">100</span> squares</strong>
           </article>
-          <article class="status-card">
-            <span>Style</span>
-            <strong>Pass and play</strong>
-          </article>
         </div>
 
         <p class="banner" id="banner" aria-live="polite"></p>
-        <p class="move-summary" id="move-summary">Choose your players and roll to start the match.</p>
+        <p class="move-summary" id="move-summary">Create a room or join one to start the match.</p>
 
         <div class="game-grid">
           <section class="players" id="players" aria-label="Players"></section>
@@ -79,12 +103,14 @@
             <p class="board-legend" id="board-legend"></p>
             <div id="board" class="board" aria-label="Snakes and Ladders board"></div>
             <button class="button button--dice" id="action-button" type="button">🎲 Roll dice</button>
+            <button class="button button--ghost" id="reset-button" type="button">Play again</button>
+            <button class="button button--ghost" id="leave-button" type="button">Leave room</button>
           </section>
         </div>
       </section>
 
       <p class="footer-note">
-        Rules: 2 to 4 local players, exact roll to reach 100, and rolling a 6 gives another turn.
+        Rules: 2 online players, exact roll to reach 100, and rolling a 6 gives another turn.
       </p>
     </main>
 
